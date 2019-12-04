@@ -3,6 +3,7 @@ import requests
 
 import sys
 import json
+import os
 
 
 def proof_of_work(block):
@@ -13,8 +14,13 @@ def proof_of_work(block):
     in an effort to find a number that is a valid proof
     :return: A valid proof for the provided block
     """
-    pass
-
+    print('===looking for proof start===')
+    block_string = json.dumps(block, sort_keys=True).encode()
+    proof = 0
+    while not valid_proof(block_string, proof):
+        proof += 1
+    print('===looking for proof finish===')
+    return proof
 
 def valid_proof(block_string, proof):
     """
@@ -27,7 +33,9 @@ def valid_proof(block_string, proof):
     correct number of leading zeroes.
     :return: True if the resulting hash is a valid proof, False otherwise
     """
-    pass
+    guess = f'{block_string}{proof}'.encode()      
+    guess_hash = hashlib.sha256(guess).hexdigest()
+    return guess_hash[:6] == '000000'
 
 
 if __name__ == '__main__':
@@ -38,10 +46,13 @@ if __name__ == '__main__':
         node = "http://localhost:5000"
 
     # Load ID
-    f = open("my_id.txt", "r")
+    dirname = os.path.dirname(os.path.abspath(__file__))
+    f = open(dirname + "\\my_id.txt", "r")
     id = f.read()
     print("ID is", id)
     f.close()
+
+    number_coins = 0
 
     # Run forever until interrupted
     while True:
@@ -56,7 +67,8 @@ if __name__ == '__main__':
             break
 
         # TODO: Get the block from `data` and use it to look for a new proof
-        # new_proof = ???
+        last_block = data['last_block']
+        new_proof = proof_of_work(last_block)
 
         # When found, POST it to the server {"proof": new_proof, "id": id}
         post_data = {"proof": new_proof, "id": id}
@@ -67,4 +79,8 @@ if __name__ == '__main__':
         # TODO: If the server responds with a 'message' 'New Block Forged'
         # add 1 to the number of coins mined and print it.  Otherwise,
         # print the message from the server.
-        pass
+        if data['message'] == 'New block forged':
+            number_coins += 1
+            print(f'{number_coins} coins mined')
+        else:
+            print(data['message'])
