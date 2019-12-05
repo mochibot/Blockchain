@@ -1,0 +1,12 @@
+.App {
+  text-align: center;
+}
+
+.Transaction {
+  display: flex;
+  align-items: center;
+}
+
+.Transaction div {
+  width: 100px;
+}
